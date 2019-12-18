@@ -1,0 +1,11 @@
+bin
+build
+.gradle
+.ipynb_checkpoints
+.DS_Store
+/.vscode
+.classpath
+.project
+.settings
+.idea
+.java-version

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [ -e "topics.txt" ]
+then
+
+    TOPICS="$(cat topics.txt)"
+    BOOTSTRAP='localhost:9092'
+    topicList="$(docker exec sw-kafka kafka-topics --list --bootstrap-server $BOOTSTRAP)"
+
+    for t in $TOPICS; do
+        name="$(echo $t | sed -Ee 's/[^-]*--topic=([^,]+),.*/\1/')"
+
+        if ! echo "$topicList" | egrep "^$name$" 1>/dev/null; then
+            echo "INFO: Creating topic $name"
+            eval "docker exec sw-kafka kafka-topics --create $(echo $t | tr ',' ' ') --bootstrap-server $BOOTSTRAP"
+        else
+            echo "INFO: Topic $name already exists"
+        fi
+    done
+fi
+

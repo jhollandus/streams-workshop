@@ -1,0 +1,148 @@
+#!/bin/bash 
+
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+image_version="5.3.1"
+bootstrap="sw-kafka:29092"
+local_bootstrap="localhost:29092"
+kafka="sw-kafka"
+sreg="sw-schema-registry"
+dir_name="$(basename $PWD)"
+
+usage() {
+cat << EOF
+Usage:
+    avro register [-b <base-schema-dir>] <schemas.properties>
+        Register all schemas found in the given properties file. Format is `schema_file=topic`
+        per line.
+
+    avro publish [-b <base-schema-dir> ] <topic> <schema> <data-file>
+        Publish all data in the file to the given topic as avro using the provided schema.
+
+    avro consume [-x] <topic>
+        Consume data from the given topic. Specify '-x' to reset the consumer otherwise it will
+        only consumer new data on subsequent runs (uses a consumer group).
+EOF
+}
+
+checknextarg() {
+  local msg="$1"
+  local _arg="${2:-NONE}"
+  if [ "$_arg" = 'NONE' ]; then
+    echo "$msg"
+    usage
+    exit 1
+  fi
+}
+
+checkfile() {
+  local msg="$1"
+  local f="$2"
+  if [ ! -e "$f" ]; then
+    echo "$msg file $props not found."
+    exit 1
+  fi
+}
+
+checknextarg "No command found" $@
+cmd="$1"; shift
+
+AVROBASEDIR='src/main/avro/'
+AVROCONRESET=0
+
+while getopts ":hb:x" opt; do
+  case ${opt} in
+    h )
+        usage
+        exit 0
+      ;;
+    b )
+        AVROBASEDIR="$OPTARG"
+      ;;
+    x )
+        AVROCONRESET=1
+      ;;
+    \? ) 
+          echo "Unknown option -$OPTARG"
+          usage
+          exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND -1))
+
+echo "executing command '$cmd'"
+
+case ${cmd} in
+    register )
+        checknextarg "Schema properties required." $@
+        props="$1"; shift
+        checkfile 'Schema properties' "$props"
+
+        while IFS="=" read -r schema topic
+        do
+          schemapath="$AVROBASEDIR/${schema}.avsc"
+          escaped_schema="$(cat $schemapath | sed -e 's/"/\\"/g' | tr -d '\n\r')"
+          subject="${topic}-value"
+
+          echo -n "Schema: $schemapath, Subject: $subject => "
+          docker exec "$sreg" curl --silent -X POST \
+            -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+            --data "{\"schema\": \"$escaped_schema\"}" \
+            http://localhost:8081/subjects/${subject}/versions
+
+          echo ""
+        done <$props
+        ;;
+
+    publish )
+        if [ $# -ne 3 ]; then
+          echo "$cmd requires 3 arguments: topic, schema, data-file. Found $#"
+          usage
+          exit 1
+        fi
+
+        topic="$1"; shift
+        schema="$1"; shift
+        datafile="$1"; shift
+
+        checkfile "Data file" "$datafile"
+
+        schemafile="$AVROBASEDIR/$schema"
+        checkfile "Schema file" "$schemafile"
+        
+        cat "$datafile" | docker exec -i "$sreg" /usr/bin/kafka-avro-console-producer \
+          --topic "$topic" \
+          --broker-list "$bootstrap" \
+          --property value.schema="$(< $schemafile)"
+        ;;
+
+     consume )
+        checknextarg "Topic required" $@
+        topic="$1"; shift
+        group="${dir_name}-output-consumer"
+
+        if [ "$AVROCONRESET" -eq 1 ]; then
+          docker exec "$kafka" kafka-consumer-groups \
+            --reset-offsets \
+            --all-topics \
+            --to-earliest \
+            --group "$group" \
+            --execute \
+            --bootstrap-server "$local_bootstrap"
+
+          docker exec "$kafka" kafka-consumer-groups
+        fi
+
+        docker exec -it "$sreg" kafka-avro-console-consumer \
+          --property schema.registry.url=http://localhost:8081 \
+          --bootstrap-server "$bootstrap" \
+          --topic "$topic" \
+          --from-beginning \
+          --skip-message-on-error \
+          --group "$group" \
+          --property print.key=true \
+          --key-deserializer=org.apache.kafka.common.serialization.StringDeserializer
+        ;;
+esac
+ 

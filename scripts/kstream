@@ -1,0 +1,104 @@
+#!/bin/bash
+
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+image_version="5.3.1"
+dir_name="$(basename $PWD)"
+name="kafka-stream-${dir_name}"
+
+usage() {
+cat << EOF
+Usage:
+    kstream [-c <config>] start
+        Build and deploy the kafka streams app found in the local directory into the docker-compose environment.
+        The '-c' flag can be used to use other configuration properties files found in the configuration directory,
+        e.g. 'dev', 'test', 'production'.
+
+    kstream stop
+        Shutdown the running kafka streams application container
+
+    kstream logs
+        Read the logs from the kafka streams container and follow them. Ctrl-c to exit.
+
+EOF
+}
+
+checknextarg() {
+  local msg="$1"
+  local _arg="${2:-NONE}"
+  if [ "$_arg" = 'NONE' ]; then
+    echo "$msg"
+    usage
+    exit 1
+  fi
+}
+
+checkfile() {
+  local msg="$1"
+  local f="$2"
+  if [ ! -e "$f" ]; then
+    echo "$msg file $props not found."
+    exit 1
+  fi
+}
+
+checknextarg "No command found" $@
+cmd="$1"; shift
+
+KSTREAMS_CONF='production'
+
+while getopts ":hc:" opt; do
+  case ${opt} in
+    h )
+        usage
+        exit 0
+      ;;
+    c )
+        KSTREAMS_CONF="$OPTARG"
+      ;;
+    \? ) 
+        echo "Unknown option -$OPTARG"
+        usage
+        exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND -1))
+
+echo "executing command '$cmd'"
+
+case ${cmd} in
+    start )
+
+        conf="$PWD/configuration/${KSTREAMS_CONF}.properties"
+        checkfile "Properties file" "$conf"
+
+        echo 'creating docker image'
+        ./gradlew jibDockerBuild --image="io.confluent.developer/kstreams-$dir_name:0.0.1"
+
+        echo 'creating topics'
+        $ROOT_DIR/scripts/topics
+
+        echo 'starting docker container'
+        docker run -d -v $conf:/config.properties \
+          --network streams-workshop_default \
+          --hostname "$name" \
+          --name "$name" \
+          "io.confluent.developer/kstreams-$dir_name:0.0.1" config.properties
+      ;;
+
+    stop )
+        echo "stopping kafka streams container $name"
+        docker stop "$name" && docker rm "$name"
+      ;;
+
+     logs )
+        docker logs -f "$name"
+        ;;
+    \? )
+        echo "Unknown command '$cmd' given."
+        usage
+        exit 1
+        ;;
+esac
+ 

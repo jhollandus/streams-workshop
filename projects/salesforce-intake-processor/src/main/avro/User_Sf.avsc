@@ -1,0 +1,51 @@
+{
+  "namespace": "io.confluent.demo.distribution",
+  "type": "record",
+  "name": "User_Sf",
+  "doc": "Represents user object from Salesforce",
+  "fields": [
+    {
+      "name": "id",
+      "doc": "The object ID from salesforce",
+       "type": [
+          "null",
+          "string"
+        ],
+
+      "default": null
+    },
+    {
+      "name": "operation",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+   {
+      "name": "worker_id",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+   {
+      "name": "social_security",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null,
+      "pii": true
+    },
+     {
+      "name": "durable_id",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    }
+  ]
+}

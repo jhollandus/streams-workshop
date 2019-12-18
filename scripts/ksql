@@ -1,0 +1,101 @@
+#!/bin/bash
+
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+image_version="5.3.1"
+bootstrap="sw-kafka:29092"
+server="http://sw-ksql-server:8088"
+sreg="http://sw-schema-registry:8081"
+dir_name="$(basename $PWD)"
+name="ksql-$dir_name"
+
+usage() {
+cat << EOF
+Usage:
+    ksql cli
+        Open up the command line interface that can execute against the local docker-compose ksql-server
+
+    ksql start
+        Deploy and start a ksql application based on the queries.sql file found in the current directory.
+
+    ksql logs
+        View the current log output of the ksql docker container for the application started from the current directory.
+
+    ksql stop
+        Stop and remove the ksql application that was started from the current directory.
+
+EOF
+}
+
+checknextarg() {
+  local msg="$1"
+  local _arg="${2:-NONE}"
+  if [ "$_arg" = 'NONE' ]; then
+    echo "$msg"
+    usage
+    exit 1
+  fi
+}
+
+checkfile() {
+  local msg="$1"
+  local f="$2"
+  if [ ! -e "$f" ]; then
+    echo "$msg file $props not found."
+    exit 1
+  fi
+}
+
+checknextarg "No command found" $@
+cmd="$1"; shift
+
+while getopts ":h" opt; do
+  case ${opt} in
+    h )
+        usage
+        exit 0
+      ;;
+    \? ) 
+        echo "Unknown option -$OPTARG"
+        usage
+        exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND -1))
+
+echo "executing command '$cmd'"
+
+case ${cmd} in
+    stop )
+        docker stop "$name" && docker rm "$name"
+        ;;
+        
+    start )
+        checkfile "Query file" 'queries.sql'
+
+        docker run -d -v $PWD:/opt/app \
+            --network streams-workshop_default \
+            --hostname "$name" \
+            --name "$name" \
+            -e KSQL_BOOTSTRAP_SERVERS="$bootstrap" \
+            -e KSQL_KSQL_SCHEMA_REGISTRY_URL="$sreg" \
+            -e KSQL_KSQL_SERVICE_ID="__${dir_name}__" \
+            -e KSQL_KSQL_QUERIES_FILE="/opt/app/queries.sql" \
+            confluentinc/cp-ksql-server:$image_version
+        ;;
+
+    logs )
+        docker logs -f "$name"
+        ;;
+
+    cli )
+        docker run -it --rm -v $PWD:/opt/app \
+            --network streams-workshop_default \
+            -e KSQL_KSQL_SCHEMA_REGISTRY_URL="$sreg" \
+            -e KSQL_KSQL_SERVICE_ID="__ksql-cli-${USER}__" \
+            --entrypoint /bin/bash \
+            confluentinc/cp-ksql-cli:$image_version ksql "$server"
+        ;;
+esac
+ 

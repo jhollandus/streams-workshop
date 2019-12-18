@@ -1,0 +1,5 @@
+{"id":{"string":"u1"},"operation":{"string":"CREATE"},"worker_id":{"string":"wid01"},"social_security":{"string":"111-111-1111"},"durable_id":{"string":"did01"}}
+{"id":{"string":"u2"},"operation":{"string":"CREATE"},"worker_id":{"string":"wid02"},"social_security":{"string":"111-111-1112"},"durable_id":{"string":"did02"}}
+{"id":{"string":"u3"},"operation":{"string":"CREATE"},"worker_id":{"string":"wid03"},"social_security":{"string":"111-111-1113"},"durable_id":{"string":"did03"}}
+{"id":{"string":"u4"},"operation":{"string":"CREATE"},"worker_id":{"string":"wid04"},"social_security":{"string":"111-111-1114"},"durable_id":{"string":"did04"}}
+{"id":{"string":"u5"},"operation":{"string":"CREATE"},"worker_id":{"string":"wid05"},"social_security":{"string":"111-111-1115"},"durable_id":{"string":"did05"}}

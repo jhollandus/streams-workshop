@@ -1,0 +1,73 @@
+{
+  "namespace": "io.confluent.demo.distribution",
+  "type": "record",
+  "name": "Campaign_L1",
+  "doc": "Represents level 1 campaign object",
+  "fields": [
+    {
+      "name": "id",
+      "doc": "The object ID from salesforce",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "operation",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "record_type",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "worker_owner_id",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "worker_created_by_id",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+      {
+      "name": "owner_id",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "durable_id",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "created_by_id",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    }
+  ]
+}
