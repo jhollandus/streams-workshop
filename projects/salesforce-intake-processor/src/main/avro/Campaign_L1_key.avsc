@@ -1,0 +1,17 @@
+{
+  "namespace": "io.confluent.demo.distribution",
+  "type": "record",
+  "name": "Campaign_L1_key",
+  "doc": "Represents level 1 campaign object",
+  "fields": [
+    {
+      "name": "id",
+      "doc": "The object ID from salesforce",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    }
+  ]
+}

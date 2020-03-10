@@ -1,0 +1,17 @@
+{
+  "namespace": "io.confluent.demo.distribution",
+  "type": "record",
+  "name": "UserLookup_L1_key",
+  "doc": "Contains data to lookup worker ids from sales force data",
+  "fields": [
+    {
+      "name": "id",
+      "doc": "The object ID from salesforce",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    }
+  ]
+}

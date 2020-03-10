@@ -1,7 +1,4 @@
 --topic=distribution-salesforce-evt-campaign.1,--partitions=1,--replication-factor=1
 --topic=distribution-salesforce-evt-user.1,--partitions=1,--replication-factor=1
---topic=_work_ksql-l1.distribution-cdc-campaign.1,--partitions=1,--replication-factor=1
---topic=ksql-l1.distribution-cdc-campaign.1,--partitions=1,--replication-factor=1,--config=cleanup.policy=compact,--config=segment.bytes=64000000
 --topic=l1.distribution-cdc-campaign.1,--partitions=1,--replication-factor=1,--config=cleanup.policy=compact,--config=segment.bytes=64000000
---topic=ksql-l1.distribution-cdc-userLookup.1,--partitions=1,--replication-factor=1,--config=cleanup.policy=compact,--config=segment.bytes=64000000
 --topic=l1.distribution-cdc-userLookup.1,--partitions=1,--replication-factor=1,--config=cleanup.policy=compact,--config=segment.bytes=64000000

@@ -1,0 +1,16 @@
+{
+  "namespace": "io.confluent.demo.distribution",
+  "type": "record",
+  "name": "User_Sf_key",
+  "fields": [
+    {
+      "name": "id",
+      "doc": "The object ID from salesforce",
+       "type": [
+          "null",
+          "string"
+        ],
+      "default": null
+    }
+  ]
+}

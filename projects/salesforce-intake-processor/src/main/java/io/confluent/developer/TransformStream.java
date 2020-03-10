@@ -1,9 +1,6 @@
 package io.confluent.developer;
 
-import io.confluent.demo.distribution.Campaign_L1;
-import io.confluent.demo.distribution.Campaign_Sf;
-import io.confluent.demo.distribution.UserLookup_L1;
-import io.confluent.demo.distribution.User_Sf;
+import io.confluent.demo.distribution.*;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import org.apache.avro.specific.SpecificRecord;
@@ -14,6 +11,7 @@ import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.kstream.GlobalKTable;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Materialized;
+import org.apache.kafka.streams.kstream.Produced;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -27,7 +25,7 @@ public class TransformStream {
 
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, envProps.getProperty("application.id"));
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, envProps.getProperty("bootstrap.servers"));
-        props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
+        props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, SpecificAvroSerde.class);
         props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, SpecificAvroSerde.class);
         props.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, envProps.getProperty("schema.registry.url"));
 
@@ -41,10 +39,12 @@ public class TransformStream {
         final String userSfTopic = envProps.getProperty("topic.user_sf.name");
         final String userLookupTopic = envProps.getProperty("topic.userLookup_l1.name");
 
-        KStream<String, User_Sf> userSfStream = builder.stream(userSfTopic);
-        KStream<String, Campaign_Sf> caimpaignSfStream = builder.stream(campaignSfTopic);
-        GlobalKTable<String, UserLookup_L1> userLookupTable = builder.globalTable(userLookupTopic,
-                Materialized.with(Serdes.String(), specificAvroSerde(UserLookup_L1.class, envProps)));
+        KStream<User_Sf_key, User_Sf> userSfStream = builder.stream(userSfTopic);
+        KStream<Campaign_Sf_key, Campaign_Sf> caimpaignSfStream = builder.stream(campaignSfTopic);
+        GlobalKTable<UserLookup_L1_key, UserLookup_L1> userLookupTable = builder.globalTable(userLookupTopic,
+                Materialized.with(
+                        specificAvroSerde(UserLookup_L1_key.class, envProps),
+                        specificAvroSerde(UserLookup_L1.class, envProps)));
 
 
         //Drop sensitive information and create a lookup topic for users
@@ -54,15 +54,15 @@ public class TransformStream {
                         .setId(userSf.getId())
                         .setWorkerId(userSf.getWorkerId())
                         .build();
-               return KeyValue.pair(userSf.getId(), userLookup);
+               return KeyValue.pair(new UserLookup_L1_key(userSf.getId()), userLookup);
         })
                 .to(userLookupTopic);
 
 
-        KStream<String, Campaign_L1> compaignL1Stream = caimpaignSfStream
-                .map((key, campSf) -> KeyValue.pair(campSf.getId(), campSf))
+        KStream<Campaign_L1_key, Campaign_L1> compaignL1Stream = caimpaignSfStream
+                .map((key, campSf) -> KeyValue.pair(new Campaign_L1_key(campSf.getId()), campSf))
                 .join(userLookupTable,
-                        (key, campaign) -> campaign.getCreatedById(),
+                        (key, campaign) -> new UserLookup_L1_key(campaign.getCreatedById()),
                         (campaign, user) -> Campaign_L1.newBuilder()
                                 .setId(campaign.getId())
                                 .setCreatedById(campaign.getCreatedById())
@@ -73,7 +73,7 @@ public class TransformStream {
                                 .setWorkerCreatedById(user.getWorkerId())
                                 .build())
                 .join(userLookupTable,
-                        (key, campaign) -> campaign.getOwnerId(),
+                        (key, campaign) -> new UserLookup_L1_key(campaign.getOwnerId()),
                         (campaign, user) -> Campaign_L1.newBuilder(campaign)
                                 .setWorkerOwnerId(user.getWorkerId())
                                 .build());

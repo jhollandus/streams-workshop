@@ -13,8 +13,8 @@ plugins {
     id 'com.google.cloud.tools.jib' version '1.1.1'
 }
 
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
+sourceCompatibility = '11'
+targetCompatibility = '11'
 version = '0.0.1'
 
 repositories {
@@ -31,11 +31,25 @@ apply plugin: 'com.github.johnrengelman.shadow'
 
 dependencies {
     compile 'org.apache.avro:avro:1.8.2'
-    implementation 'org.slf4j:slf4j-simple:1.7.26'
+    implementation 'org.apache.logging.log4j:log4j-api:2.13.1'
+    implementation 'org.apache.logging.log4j:log4j-core:2.13.1'
     implementation 'org.apache.kafka:kafka-streams:2.3.1'
-    implementation 'io.confluent:kafka-streams-avro-serde:5.2.0'
+    implementation 'io.confluent:kafka-streams-avro-serde:5.3.1'
+
+    testRuntime 'org.apache.logging.log4j:log4j-slf4j-impl:2.13.1'
+    testCompile 'tech.allegro.schema.json2avro:converter:0.2.9'
     testCompile 'org.apache.kafka:kafka-streams-test-utils:2.2.0'
     testCompile 'junit:junit:4.12'
+
+    //for kafka integration tests
+    testCompile "org.apache.kafka:kafka-clients:2.3.1:test"
+    testCompile "org.apache.kafka:kafka-streams:2.3.1:test"
+    testCompile("org.apache.kafka:kafka_2.12:2.3.1") {
+        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    }
+    testCompile("org.apache.kafka:kafka_2.12:2.3.1:test") {
+        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    }
 }
 
 test {

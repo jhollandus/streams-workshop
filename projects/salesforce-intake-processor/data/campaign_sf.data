@@ -1,5 +1,5 @@
-{"id":{"string":"c1"},"record_type":{"string":"foo"},"operation":{"string":"CREATE"},"created_by_id":{"string":"u2"},"owner_id":{"string":"u3"},"durable_id":{"string":"did01"}}
-{"id":{"string":"c2"},"record_type":{"string":"foo"},"operation":{"string":"CREATE"},"created_by_id":{"string":"u3"},"owner_id":{"string":"u4"},"durable_id":{"string":"did02"}}
-{"id":{"string":"c3"},"record_type":{"string":"foo"},"operation":{"string":"CREATE"},"created_by_id":{"string":"u4"},"owner_id":{"string":"u5"},"durable_id":{"string":"did03"}}
-{"id":{"string":"c4"},"record_type":{"string":"foo"},"operation":{"string":"CREATE"},"created_by_id":{"string":"u5"},"owner_id":{"string":"u1"},"durable_id":{"string":"did04"}}
-{"id":{"string":"c5"},"record_type":{"string":"foo"},"operation":{"string":"CREATE"},"created_by_id":{"string":"u1"},"owner_id":{"string":"u2"},"durable_id":{"string":"did05"}}
+{"id":"c1"}|{"id":"c1","record_type":"foo","operation":"CREATE","created_by_id":"u2","owner_id":"u3","durable_id":"did01"}
+{"id":"c2"}|{"id":"c2","record_type":"foo","operation":"CREATE","created_by_id":"u3","owner_id":"u4","durable_id":"did02"}
+{"id":"c3"}|{"id":"c3","record_type":"foo","operation":"CREATE","created_by_id":"u4","owner_id":"u5","durable_id":"did03"}
+{"id":"c4"}|{"id":"c4","record_type":"foo","operation":"CREATE","created_by_id":"u5","owner_id":"u1","durable_id":"did04"}
+{"id":"c5"}|{"id":"c5","record_type":"foo","operation":"CREATE","created_by_id":"u1","owner_id":"u2","durable_id":"did05"}
